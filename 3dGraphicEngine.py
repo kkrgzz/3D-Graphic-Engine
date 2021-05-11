@@ -15,9 +15,9 @@ class Cam:
     def events(self, event):
         if event.type == pygame.MOUSEMOTION:
             x, y = event.rel
-            x /= 200;
+            x /= 200
             y /= 200
-            self.rot[0] += y;
+            self.rot[0] += y
             self.rot[1] += x
 
     def update(self, dt, key):
@@ -35,10 +35,19 @@ class Cam:
         if key[pygame.K_d]: self.pos[0] += y; self.pos[2] -= x
 
 
+class Cube:
+    vertices = (-1, -1, -1), (1, -1, -1), (1, 1, -1), (-1, 1, -1), (-1, -1, 1), (1, -1, 1), (1, 1, 1), (-1, 1, 1)
+    edges = (0, 1), (1, 2), (2, 3), (3, 0), (4, 5), (5, 6), (6, 7), (7, 4), (0, 4), (3, 7), (2, 6), (1, 5)
+    faces = (0, 1, 2, 3), (4, 5, 6, 7), (1, 2, 6, 5), (0, 3, 7, 4), (0, 1, 5, 4), (2, 3, 7, 6)
+    colors = (255, 0, 0), (255, 128, 0), (255, 255, 0), (255, 255, 255), (0, 0, 255), (0, 255, 0)
+
+    def __init__(self, pos=(0, 0, 0)):
+        x, y, z = pos
+        self.verts = [(x + X / 2, y + Y / 2, z + Z / 2) for X, Y, Z in self.vertices]
 
 
 pygame.init()
-w, h = 400, 400;
+w, h = 1000, 800;
 pygame.display.set_caption("3D Graphics Engine")
 cx, cy = w // 2, h // 2
 screen = pygame.display.set_mode((w, h))
@@ -47,18 +56,15 @@ clock = pygame.time.Clock()
 points = np.array([[-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1], [-1, -1, 1], [1, -1, 1], [1, 1, 1], [-1, 1, 1]])
 connections = np.array([[0, 1], [1, 2], [2, 3], [3, 0], [4, 5], [5, 6], [6, 7], [7, 4], [0, 4], [3, 7], [2, 6], [1, 5]])
 
-verts = (-1, -1, -1), (1, -1, -1), (1, 1, -1), (-1, 1, -1), (-1, -1, 1), (1, -1, 1), (1, 1, 1), (-1, 1, 1)
-edges = (0, 1), (1, 2), (2, 3), (3, 0), (4, 5), (5, 6), (6, 7), (7, 4), (0, 4), (3, 7), (2, 6), (1, 5)
-faces = (0, 1, 2, 3), (4, 5, 6, 7), (1, 2, 6, 5), (0, 3, 7, 4), (0, 1, 5, 4), (2, 3, 7, 6)
-colors = (255, 0, 0), (255, 128, 0), (255, 255, 0), (255, 255, 255), (0, 0, 255), (0, 255, 0)
-
 cam = Cam()
-cam.__int__((0, 0, -5))
+cam.__int__((0, 0, 0))
 
-pygame.event.get();
+pygame.event.get()
 pygame.mouse.get_rel()
-pygame.mouse.set_visible(0);
-pygame.event.set_grab(1)
+pygame.mouse.set_visible(False)
+pygame.event.set_grab(True)
+
+cubes = [Cube((0, 0, 0)), Cube((2, 0, 0)), Cube((5, 4, 0))]
 
 font = pygame.font.Font(pygame.font.get_default_font(), 12)
 while True:
@@ -80,41 +86,43 @@ while True:
     screen.blit(zValue, dest=(0, 30))
     screen.blit(fpsValue, dest=(0, 45))
 
-    vert_list = []
-    screen_coords = []
     face_color = []
     depth = []
     face_list = []
 
-    for x, y, z in verts:
-        x -= cam.pos[0]
-        y -= cam.pos[1]
-        z -= cam.pos[2]
+    for obj in cubes:
 
-        x, z = rotate2d((x, z), cam.rot[1])
-        y, z = rotate2d((y, z), cam.rot[0])
+        vert_list = []
+        screen_coords = []
+        for x, y, z in obj.verts:
+            x -= cam.pos[0]
+            y -= cam.pos[1]
+            z -= cam.pos[2]
 
-        vert_list += [(x, y, z)]
+            x, z = rotate2d((x, z), cam.rot[1])
+            y, z = rotate2d((y, z), cam.rot[0])
 
-        f = 200 / z
-        x, y = x * f, y * f
-        screen_coords += [(cx + int(x), cy + int(y))]
+            vert_list += [(x, y, z)]
 
-    for f in range(len(faces)):
-        face = faces[f]
-        on_screen = False
-        for i in face:
-            x, y = screen_coords[i]
-            if vert_list[i][2] > 0 and 0 < x < w and 0 < y < h: on_screen = True; break
+            f = 200 / z
+            x, y = x * f, y * f
+            screen_coords += [(cx + int(x), cy + int(y))]
 
-        if on_screen:
-            coords = [screen_coords[i] for i in face]
-            face_list += [coords]
-            face_color += [colors[f]]
-            depth += [sum(sum(vert_list[j][i] for j in face) ** 2 for i in range(3))]
+        for f in range(len(obj.faces)):
+            face = obj.faces[f]
+            on_screen = False
+            for i in face:
+                x, y = screen_coords[i]
+                if vert_list[i][2] > 0 and 0 < x < w and 0 < y < h: on_screen = True; break
 
+            if on_screen:
+                coords = [screen_coords[i] for i in face]
+                face_list += [coords]
+                face_color += [obj.colors[f]]
+                depth += [sum(sum(vert_list[j][i] for j in face) ** 2 for i in range(3))]
+
+    # Final drawing part, all faces from all objects
     order = sorted(range(len(face_list)), key=lambda i: depth[i], reverse=True)
-
     for i in order:
         try:
             pygame.draw.polygon(screen, face_color[i], face_list[i])
