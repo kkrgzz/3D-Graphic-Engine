@@ -1,7 +1,8 @@
 import pygame
 import sys
 import math
-import numpy as np
+
+green = (34, 139, 34)
 
 
 def rotate2d(pos, rad): x, y = pos; s, c = math.sin(rad), math.cos(rad); return x * c - y * s, y * c + x * s
@@ -39,7 +40,7 @@ class Cube:
     vertices = (-1, -1, -1), (1, -1, -1), (1, 1, -1), (-1, 1, -1), (-1, -1, 1), (1, -1, 1), (1, 1, 1), (-1, 1, 1)
     edges = (0, 1), (1, 2), (2, 3), (3, 0), (4, 5), (5, 6), (6, 7), (7, 4), (0, 4), (3, 7), (2, 6), (1, 5)
     faces = (0, 1, 2, 3), (4, 5, 6, 7), (1, 2, 6, 5), (0, 3, 7, 4), (0, 1, 5, 4), (2, 3, 7, 6)
-    colors = (255, 0, 0), (255, 128, 0), (255, 255, 0), (255, 255, 255), (0, 0, 255), (0, 255, 0)
+    colors = (255, 0, 0), (255, 128, 0), (255, 255, 0), (255, 255, 255), green, (0, 255, 0)
 
     def __init__(self, pos=(0, 0, 0)):
         x, y, z = pos
@@ -47,14 +48,12 @@ class Cube:
 
 
 pygame.init()
-w, h = 1000, 800;
+w, h = 1000, 800
 pygame.display.set_caption("3D Graphics Engine")
+font = pygame.font.Font(pygame.font.get_default_font(), 12)
 cx, cy = w // 2, h // 2
 screen = pygame.display.set_mode((w, h))
 clock = pygame.time.Clock()
-
-points = np.array([[-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1], [-1, -1, 1], [1, -1, 1], [1, 1, 1], [-1, 1, 1]])
-connections = np.array([[0, 1], [1, 2], [2, 3], [3, 0], [4, 5], [5, 6], [6, 7], [7, 4], [0, 4], [3, 7], [2, 6], [1, 5]])
 
 cam = Cam()
 cam.__int__((0, 0, 0))
@@ -66,7 +65,20 @@ pygame.event.set_grab(True)
 
 cubes = [Cube((0, 0, 0)), Cube((2, 0, 0)), Cube((5, 4, 0))]
 
-font = pygame.font.Font(pygame.font.get_default_font(), 12)
+
+i, k = (0, 0)
+x, y, z = (10, 10, 10)
+cubes  = []
+# Print X values to the ground
+while i < 10:  # Length of the X axis that in block unit
+    k=0
+    while k < 10:  # Length of the Z axis that in block unit
+        cubes.extend([Cube((x-i, y, z-k))])
+        k += 1
+    i+=1
+
+
+
 while True:
     dt = clock.tick() / 1000
 
@@ -75,8 +87,9 @@ while True:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE: pygame.quit(); sys.exit()
         cam.events(event)
-    screen.fill((0, 0, 0))
+    screen.fill((0, 192, 255))
 
+    # X, Y, Z  ve FPS değerleri ekrana yazdırılıyor.
     xValue = font.render('X: ' + str(cam.pos[0]), True, (253, 84, 99))
     yValue = font.render('Y: ' + str(cam.pos[1]), True, (227, 140, 89))
     zValue = font.render('Z: ' + str(cam.pos[2]), True, (250, 227, 98))
