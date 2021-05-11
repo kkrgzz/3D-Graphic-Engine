@@ -35,6 +35,8 @@ class Cam:
         if key[pygame.K_d]: self.pos[0] += y; self.pos[2] -= x
 
 
+
+
 pygame.init()
 w, h = 400, 400;
 pygame.display.set_caption("3D Graphics Engine")
@@ -58,6 +60,7 @@ pygame.mouse.get_rel()
 pygame.mouse.set_visible(0);
 pygame.event.set_grab(1)
 
+font = pygame.font.Font(pygame.font.get_default_font(), 12)
 while True:
     dt = clock.tick() / 1000
 
@@ -68,8 +71,21 @@ while True:
         cam.events(event)
     screen.fill((0, 0, 0))
 
+    xValue = font.render('X: ' + str(cam.pos[0]), True, (253, 84, 99))
+    yValue = font.render('Y: ' + str(cam.pos[1]), True, (227, 140, 89))
+    zValue = font.render('Z: ' + str(cam.pos[2]), True, (250, 227, 98))
+    fpsValue = font.render('FPS: ' + str(clock.get_fps()), True, (255, 255, 255))
+    screen.blit(xValue, dest=(0, 0))
+    screen.blit(yValue, dest=(0, 15))
+    screen.blit(zValue, dest=(0, 30))
+    screen.blit(fpsValue, dest=(0, 45))
+
     vert_list = []
     screen_coords = []
+    face_color = []
+    depth = []
+    face_list = []
+
     for x, y, z in verts:
         x -= cam.pos[0]
         y -= cam.pos[1]
@@ -84,9 +100,6 @@ while True:
         x, y = x * f, y * f
         screen_coords += [(cx + int(x), cy + int(y))]
 
-    face_list = []
-    face_color = []
-    depth = []
     for f in range(len(faces)):
         face = faces[f]
         on_screen = False
